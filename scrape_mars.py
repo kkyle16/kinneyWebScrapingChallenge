@@ -6,9 +6,11 @@ from splinter import Browser
 import time
 import re
 
+# Allows for scraping via splinter
 def init_browser():
     executable_path = {"executable_path": "Firefox\geckodriver.exe"}
     return Browser("firefox", **executable_path, headless=False)
+
 
 def mars_news():
     browser = init_browser()
@@ -76,6 +78,7 @@ def mars_facts():
     return fact_table
 
 def mars_hemi_imgs():
+    # This half of the function finds the partial urls for each hemisphere
     browser = init_browser()
     url = "https://astrogeology.usgs.gov/search/results?q=hemisphere+enhanced&k1=target&v1=Mars"
     browser.visit(url)
@@ -88,10 +91,14 @@ def mars_hemi_imgs():
     for result in results:
         href = result.find("a")
         hrefs.append(href["href"])
-    
-    re.split("/search/map/Mars/Viking/|_enhanced", hrefs[2])
+    browser.quit()
+
+    # This half of the code uses the partial urls, combines with with their former half,
+    # and then pulls the larger image
+    # re.split("/search/map/Mars/Viking/|_enhanced", hrefs[2])
     url = "https://astrogeology.usgs.gov"
     hemisphere_images_urls = []
+
     for href in hrefs:
         browser = init_browser()
         browser.visit(url + href)
@@ -99,8 +106,10 @@ def mars_hemi_imgs():
         html = browser.html
         soup = bs(html, "html.parser")
 
+        # Pulls the hemisphere name from the url and makes it look nicer
         res = re.split("/search/map/Mars/Viking/|_enhanced", href)
         title = res[1]
+        title = title.replace("_", " ", 1).title()
 
         results = soup.find("img", class_="wide-image")
         img = results["src"]
@@ -125,5 +134,4 @@ def scrape():
                 "facts_table" : facts_table,
                 "hemi_imgs" : hemi_imgs
     }
-    # browser.quit()
     return mars_dict
